@@ -1,37 +1,27 @@
 package tarantoolstore
 
 import (
+	"fl_ru/store"
 	"github.com/tarantool/go-tarantool"
 )
 
 type Store struct{
-	config         *Config
-	db             *tarantool.Connection
-	UserRepository *UserRepository
+	conn            *tarantool.Connection
+	UserRepository 	*UserRepository
 }
 
-func New(config *Config) *Store {
-	return &Store{
-		config: config,
-	}
-}
-
-func (s*Store) Open() error{
-	opts := tarantool.Opts{User: "guest"}
-	url := s.config.DatabaseUrl
-	db, err := tarantool.Connect(url, opts)
+func New(dbUrl string) (*Store, error) {
+	conn, err := newTarantoolConnect(dbUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.db = db
-	return nil
+	return &Store{
+		conn: conn,
+	}, nil
 }
 
-func (s*Store) Close(){
-	_ = s.db.Close()
-}
 
-func (s*Store) User() *UserRepository {
+func (s*Store) User() store.UserRepository {
 	if s.UserRepository != nil{
 		return s.UserRepository
 	}
@@ -39,4 +29,10 @@ func (s*Store) User() *UserRepository {
 		store: s,
 	}
 	return s.UserRepository
+}
+
+func newTarantoolConnect(dbUrl string) (*tarantool.Connection, error) {
+	opts := tarantool.Opts{User: "guest"}
+	db, err := tarantool.Connect(dbUrl, opts)
+	return db, err
 }

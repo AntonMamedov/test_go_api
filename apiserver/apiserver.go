@@ -1,65 +1,17 @@
 package apiserver
 
 import (
-	"fl_ru/store"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"io"
+	"fl_ru/store/tarantoolstore"
+	"log"
 	"net/http"
 )
 
-type APIServer struct {
-	config *Config
-	logger *logrus.Logger
-	router *mux.Router
-	store *store.Store
-}
-
-func New(config *Config) *APIServer{
-	return &APIServer{
-		config: config,
-		logger: logrus.New(),
-		router: mux.NewRouter(),
+func Start(config *Config) error{
+	store, err := tarantoolstore.New(config.DatabaseUrl)
+	if err != nil{
+		log.Fatal(err)
 	}
-}
-
-func (s *APIServer) Start() error{
-	if err := s.configureLogger(); err != nil{
-		return err
-	}
-	s.logger.Info("starting api server")
-	s.configureRouter()
-	if err := s.configureStore(); err != nil{
-		 return err
-	}
-	return http.ListenAndServe(s.config.BindAddr, s.router)
-}
-
-func (s *APIServer) configureLogger() error{
-	level, err := logrus.ParseLevel(s.config.LogLevel)
-	if err != nil {
-		return err
-	}
-	 s.logger.SetLevel(level)
-	return nil
-}
-
-func (s *APIServer) configureRouter(){
-	s.router.HandleFunc("/hello", s.handleHello())
-}
-
-func (s *APIServer) configureStore() error{
-	st := store.New(s.config.Store)
-	if err := st.Open(); err != nil{
-		return err
-	}
-	s.store = st
-	return nil
-}
-
-func (s *APIServer) handleHello() http.HandlerFunc{
-	return func(w http.ResponseWriter, r *http.Request){
-		_, _ = io.WriteString(w, "Hello")
-	}
+	s:=newServer(store)
+	return http.ListenAndServe(config.BindAddr, s)
 }
 
