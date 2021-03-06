@@ -1,4 +1,4 @@
-package store
+package tarantoolstore
 
 import "fl_ru/model"
 
@@ -7,8 +7,8 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) Create(u *model.User)(*model.User, error){
-	resp, err := r.store.db.Insert("user", u)
-	println(resp)
+	_, err := r.store.db.Insert("user", u)
+
 	return nil, err
 }
 
