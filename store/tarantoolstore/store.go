@@ -6,8 +6,9 @@ import (
 )
 
 type Store struct{
-	conn            *tarantool.Connection
-	UserRepository 	*UserRepository
+	conn              *tarantool.Connection
+	UserRepository 	  *UserRepository
+	SessionRepository *SessionRepository
 }
 
 func New(dbUrl string) (*Store, error) {
@@ -29,6 +30,16 @@ func (s*Store) User() store.UserRepository {
 		store: s,
 	}
 	return s.UserRepository
+}
+
+func (s *Store) Session() store.SessionRepository{
+	if s.SessionRepository != nil{
+		return s.SessionRepository
+	}
+	s.SessionRepository = &SessionRepository{
+		store: s,
+	}
+	return s.SessionRepository
 }
 
 func newTarantoolConnect(dbUrl string) (*tarantool.Connection, error) {

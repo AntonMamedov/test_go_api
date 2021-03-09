@@ -15,9 +15,12 @@ user = box.schema.create_space('user', {
 
 user:format(
         {
-            {name = 'user_name', type = 'string'},
+            {name = 'id', type = 'unsigned'},
             {name = 'email', type = 'string'},
             {name = 'password', type = 'string'},
+            {name = 'user_name', type = 'string'},
+            {name = 'first_name', type = 'string'},
+            {name = 'second_name', type = 'string'},
             {name = 'executor', type = 'boolean'},
             {name = 'description', type = 'string', is_nullable=true},
             {name = 'specializes', type = 'array', is_nullable=true},
@@ -26,14 +29,15 @@ user:format(
 )
 
 user:create_index('primary', {
-    type = 'HASH',
-    parts = {'user_name'},
-    if_not_exists = true,
-
-})
-user:create_index('email_index', {
+    sequence = true,
     type = 'TREE',
+    parts = {'id'},
+    if_not_exists = true,
+})
+
+user:create_index('email_key', {
     unique = true,
+    type = 'HASH',
     parts = {'email'},
     if_not_exists = true,
 })
@@ -78,11 +82,36 @@ specialize:format(
         }
 )
 
-order:create_index('primary', {
+specialize:create_index('primary', {
     type = 'HASH',
     parts = {'specialize_name'},
     if_not_exists = true,
 })
+
+--Хранилище кук
+session = box.schema.create_space('session', {
+    if_not_exists = true
+})
+
+session:format(
+        {
+            {name = 'session', type = 'string'},
+            {name = 'user_id', type = 'unsigned'},
+        }
+)
+
+session:create_index('primary', {
+    type = 'HASH',
+    parts = {'session'},
+    if_not_exists = true,
+})
+
+function alldrop()
+    user:drop()
+    order:drop()
+    specialize:drop()
+    session:drop()
+end
 
 
 require'console'.start()
